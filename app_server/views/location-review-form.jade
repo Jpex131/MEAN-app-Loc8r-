@@ -3,7 +3,7 @@ extends layout
 block content 
     .row.page-header 
         .col-12 
-            h1 Review StarCUps
+            h1= pageHeader.title
     .row 
         .col-12.col-md-8
             form(action="/location", method="get", role="form")
