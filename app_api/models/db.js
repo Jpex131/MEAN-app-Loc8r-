@@ -1,7 +1,6 @@
 var mongoose = require('mongoose');
 var gracefulShutdown;
-var dbURI = 'mongodb://Jpex117:Gogeta201@localhost:27017/Loc8r?authSource=admin';
-
+var dbURI = 'mongodb://###:###@localhost:27017/Loc8r?authSource=admin';
 
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true });
 
