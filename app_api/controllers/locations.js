@@ -63,15 +63,14 @@ module.exports.locationsListByDistance = async function (req, res) {
         coordinates: [lng, lat]
     };
 
-    /* PROBANDO FUNCIONALIDAD... FIX ME */
     var geoOptions = {
         spherical: true,
         distanceField: "dist.calculated",
-        maxDistance: theEarth.getRadsFromDistance(maxDistance * 1000) // Convierte km a metros
+        maxDistance: theEarth.getRadsFromDistance(maxDistance) // Convierte km a metros
     };
     
     
-    console.log("Geo options for quesry:", geoOptions);
+    console.log("GeoOptions for query:", geoOptions);
 
     try {
         const results = await Loc.aggregate([
@@ -86,6 +85,13 @@ module.exports.locationsListByDistance = async function (req, res) {
         console.log(`geoNear results count: ${results.length}`);
         console.log(`GeoNear result: ${JSON.stringify(results, null, 2)}`)
 
+        if (results.length === 0) {
+            sendJsonResponse(res, 404, {
+                "message" : "No locations found nearby"
+            });
+            return;
+        }
+        
         const locations = results.map(doc => ({
             distance: theEarth.getDistanceFromRads(doc.dist.calculated),
             name: doc.name,
