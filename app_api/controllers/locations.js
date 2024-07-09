@@ -91,7 +91,6 @@ module.exports.locationsListByDistance = async function (req, res) {
             });
             return;
         }
-        
         const locations = results.map(doc => ({
             distance: theEarth.getDistanceFromRads(doc.dist.calculated),
             name: doc.name,
