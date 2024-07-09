@@ -7,7 +7,38 @@ var sendJsonResponse = function(res, status, content){
     res.json(content);
 }
 
-module.exports.reviewsCreate = function(req, res){};
+module.exports.reviewsCreate = async function(req, res){ 
+    if (req.params.locationid) {
+        try {
+            const location = await Loc.findById(req.params.locationid).select('reviews').exec();
+            if (!location){
+                sendJsonResponse(res, 404, {
+                    "message" :"locationid not found"
+                });
+                return;
+            }
+
+            location.reviews.push({
+                author: req.body.author,
+                id: new Date().valueOf(), // Generar un ID unico para la resena
+                rating: req.body.rating,
+                reviewText: req.body.reviewText,
+                createdOn: new Date()
+            });
+
+            const updatedLocation = await location.save();
+            const thisReview = updatedLocation.reviews[updatedLocation.reviews.length -1];
+            sendJsonResponse(res, 201, thisReview);
+        } catch (err) {
+            sendJsonResponse(res, 400, err);
+        }
+    } else {
+        sendJsonResponse(res, 404, {
+            "message" : "Not found, locationid required"
+        });
+    }
+
+};
 
 module.exports.reviewsReadOne = async function(req, res){
     console.log("Getting single review");
