@@ -82,4 +82,42 @@ module.exports.reviewsReadOne = async function(req, res){
     }
 };
 
-module.exports.reviewsDeleteOne = function(req, res){};
+module.exports.reviewsDeleteOne = async function(req, res){
+    if (!req.params || !req.params.locationid || !req.params.reviewid) {
+        sendJsonResponse(res, 404, {
+            "message" : "Not found, locationid and reviewid are both required"
+        });
+        return;
+    }
+    try {
+        const location = await Loc.findById(req.params.locationid).select('reviews').exec();
+
+        if (!location) {
+            sendJsonResponse(res, 404, {
+                "message":"locationid not found"
+            });
+            return;
+        }
+        if (!location.reviews || location.reviews.length === 0) {
+            sendJsonResponse(res, 404, {
+                "message":"No review to delete"
+            });
+            return;
+        }
+        const review = location.reviews.id(req.params.reviewid);
+        
+        if (!review) {
+            sendJsonResponse(res, 404, {
+                "message":"reviewid not found"
+            });
+            return;
+        }
+
+        location.reviews.pull({ _id: req.params.reviewid });
+        await location.save();
+        sendJsonResponse(res, 204, null);
+    } catch (err) {
+        console.error("Error during review deletion:", err);
+        sendJsonResponse(res, 400, err);
+    }
+};
