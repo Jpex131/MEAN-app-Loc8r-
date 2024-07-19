@@ -7,6 +7,34 @@ var sendJsonResponse = function(res, status, content){
     res.json(content);
 }
 
+var updateAverageRating = function(locationid) {
+    Loc.findById(locationid).select('rating reviews').exec(function(err, location){
+        if (!err) {
+            doSetAverageRating(location);
+        }
+    });
+};
+
+var doSetAverageRating = function(location){
+    var  i, reviewCount, ratingAverage, ratingTotal;
+    if (location.reviews && location.reviews.length > 0){
+        reviewCount = location.reviews.length;
+        ratingTotal = 0;
+        for (i = 0; i < reviewCount; i++) {
+            ratingTotal += location.reviews[i].rating;
+        }
+        ratingAverage = parseInt(ratingTotal / reviewCount, 10);
+        location.rating = ratingAverage;
+        location.save(function(err){
+            if (err){
+                console.log(err);
+            } else {
+                console.log("Average rating update to", ratingAverage);
+            }
+        });
+    }
+};
+
 module.exports.reviewsCreate = async function(req, res){ 
     if (req.params.locationid) {
         try {
@@ -28,6 +56,10 @@ module.exports.reviewsCreate = async function(req, res){
 
             const updatedLocation = await location.save();
             const thisReview = updatedLocation.reviews[updatedLocation.reviews.length -1];
+
+            // Update the average rating
+            updateAverageRating(req.params.locationid);
+
             sendJsonResponse(res, 201, thisReview);
         } catch (err) {
             sendJsonResponse(res, 400, err);
@@ -115,6 +147,10 @@ module.exports.reviewsDeleteOne = async function(req, res){
 
         location.reviews.pull({ _id: req.params.reviewid });
         await location.save();
+
+        // Update the average rating
+        updateAverageRating(req.params.locationid)
+
         sendJsonResponse(res, 204, null);
     } catch (err) {
         console.error("Error during review deletion:", err);
