@@ -7,15 +7,18 @@ var sendJsonResponse = function(res, status, content){
     res.json(content);
 }
 
-var updateAverageRating = function(locationid) {
-    Loc.findById(locationid).select('rating reviews').exec(function(err, location){
-        if (!err) {
+var updateAverageRating = async function(locationid) {
+    try {
+        const location = await Loc.findById(locationid).select('rating reviews').exec();
+        if (location){
             doSetAverageRating(location);
         }
-    });
+    } catch (err) {
+        console.error("Error updating average ratin:", err);
+    }
 };
 
-var doSetAverageRating = function(location){
+var doSetAverageRating = async function(location){
     var  i, reviewCount, ratingAverage, ratingTotal;
     if (location.reviews && location.reviews.length > 0){
         reviewCount = location.reviews.length;
@@ -25,13 +28,12 @@ var doSetAverageRating = function(location){
         }
         ratingAverage = parseInt(ratingTotal / reviewCount, 10);
         location.rating = ratingAverage;
-        location.save(function(err){
-            if (err){
-                console.log(err);
-            } else {
-                console.log("Average rating update to", ratingAverage);
-            }
-        });
+        try {
+            await location.save();
+            console.log("Average rating updated to", ratingAverage);
+        } catch (err) {
+            console.log("Error saving updated rating:", err);
+        }
     }
 };
 
@@ -58,7 +60,7 @@ module.exports.reviewsCreate = async function(req, res){
             const thisReview = updatedLocation.reviews[updatedLocation.reviews.length -1];
 
             // Update the average rating
-            updateAverageRating(req.params.locationid);
+            await updateAverageRating(req.params.locationid);
 
             sendJsonResponse(res, 201, thisReview);
         } catch (err) {
