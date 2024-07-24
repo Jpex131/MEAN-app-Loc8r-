@@ -2,11 +2,13 @@ const { raw } = require('body-parser');
 var mongoose = require('mongoose');
 var Loc = mongoose.model('Location');
 
+// Function to send a JSON response
 var sendJsonResponse = function(res, status, content){
     res.status(status);
     res.json(content);
 }
 
+// Update the average rating of a location
 var updateAverageRating = async function(locationid) {
     try {
         const location = await Loc.findById(locationid).select('rating reviews').exec();
@@ -18,6 +20,7 @@ var updateAverageRating = async function(locationid) {
     }
 };
 
+// Calculate and set the average rating
 var doSetAverageRating = async function(location){
     var  i, reviewCount, ratingAverage, ratingTotal;
     if (location.reviews && location.reviews.length > 0){
@@ -37,6 +40,7 @@ var doSetAverageRating = async function(location){
     }
 };
 
+// Handler to create a new review
 module.exports.reviewsCreate = async function(req, res){ 
     if (req.params.locationid) {
         try {
@@ -50,7 +54,7 @@ module.exports.reviewsCreate = async function(req, res){
 
             location.reviews.push({
                 author: req.body.author,
-                id: new Date().valueOf(), // Generar un ID unico para la resena
+                id: new Date().valueOf(), // Generate a unique ID for the review
                 rating: req.body.rating,
                 reviewText: req.body.reviewText,
                 createdOn: new Date()
@@ -74,6 +78,7 @@ module.exports.reviewsCreate = async function(req, res){
 
 };
 
+// Handler to read a specific review by location ID and review ID
 module.exports.reviewsReadOne = async function(req, res){
     console.log("Getting single review");
     if(req.params && req.params.locationid && req.params.reviewid){

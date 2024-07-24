@@ -1,18 +1,22 @@
 var mongoose = require('mongoose');
 var Loc = mongoose.model('Location');
 
+// Function to send a JSON response
 var sendJsonResponse = function(res, status, content) {
     res.status(status);
     res.json(content);
 };
 
+// Utility for Earth radius calculations
 var theEarth = (function () {
     var earthRadius = 6371; //km, miles is 3959
 
+    // Convert radians to distance in km
     var getDistanceFromRads = function(rads) {
         return parseFloat(rads * earthRadius);
     };
 
+    // Convert distance in km to radians
     var getRadsFromDistance = function(distance) {
         return parseFloat(distance / earthRadius);
     };
@@ -23,6 +27,7 @@ var theEarth = (function () {
     };
 })();
 
+// Handler to read a spcific location by ID
 module.exports.locationsReadOne = async function(req, res) {
     if (req.params && req.params.locationid) {
         console.log("Received locationid:", req.params.locationid);
@@ -45,6 +50,7 @@ module.exports.locationsReadOne = async function(req, res) {
     }
 };
 
+// Handler to list locations by distance from a point
 module.exports.locationsListByDistance = async function (req, res) {
     var lng = parseFloat(req.query.lng);
     var lat = parseFloat(req.query.lat);
@@ -107,10 +113,11 @@ module.exports.locationsListByDistance = async function (req, res) {
     }
 };
 
+// Handler to create a new location
 module.exports.locationsCreate = async function (req, res) {
     const { name, address, coords } = req.body;
 
-    // Validación de datos
+    // Data validation
     if (!name || !address) {
         sendJsonResponse(res, 400, {
             "message": "Name and address are required"
@@ -118,11 +125,11 @@ module.exports.locationsCreate = async function (req, res) {
         return;
     }
     try {
-        // Comprobar duplicados por nombre y dirección
+        // Check for duplicates by name and address
         let existingLocation = await Loc.findOne({ name: name, address: address });
 
         if (!existingLocation && coords) {
-            // Comprobar duplicados por coordenadas si se proporcionan
+            // Check for duplicates by coordinates if provided
             existingLocation = await Loc.findOne({ coords: coords });
         }
 
@@ -133,12 +140,12 @@ module.exports.locationsCreate = async function (req, res) {
             return;
         }
 
-        // Crear y guardar nueva ubicación
+        // Create and save new location
         const location = new Loc({
             name: name,
             address: address,
             coords: coords
-            // Añade otros campos necesarios aquí
+            // Add other necessary fields here
         });
 
         const savedLocation = await location.save();
@@ -148,8 +155,11 @@ module.exports.locationsCreate = async function (req, res) {
     }
 };
 
+// FIXME: Ensure to implement this functionality
+// Placeholder for update functionality
 module.exports.locationsUpdateOne = function (req, res) {}
 
+// Handler to delete a specific location by ID
 module.exports.locationsDeleteOne = async function (req, res) {
     if (!req.params || !req.params.locationid){
         sendJsonResponse(res, 404, {
