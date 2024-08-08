@@ -18,11 +18,17 @@ var reviewSchema = new mongoose.Schema({
 var locationSchema = new mongoose.Schema({
     name: { type: String, required: true },
     address: String,
-    rating: { type: Number, "default": 0, min: 0, max: 5 },
+    rating: { type: Number, default: 0, min: 0, max: 5 },
     facilities: [String],
-    coords: { type: [Number], index: '2dsphere', required: true },
+    location: {
+        type: { type: String, enum: ['Point'], required: true },
+        coordinates: { type: [Number], required: true }
+    },
     openingTimes: [openingTimeSchema],
     reviews: [reviewSchema]
 });
+
+// Create a single 2dsphere index for the `location` field
+locationSchema.index({ location: '2dsphere' })
 
 mongoose.model('Location', locationSchema);
