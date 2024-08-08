@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 var Loc = mongoose.model('Location');
-
+// Function to send a JSON response
 var sendJSONresponse = function(res, status, content) {
   res.status(status);
   res.json(content);
@@ -138,7 +138,41 @@ module.exports.locationsCreate = async function (req, res) {
 };
 
 // Placeholder for update functionality
-module.exports.locationsUpdateOne = function (req, res) {}
+module.exports.locationsUpdateOne = async function (req, res) {
+    if (!req.params.locationid) {
+        sendJSONresponse(res, 404, {
+            "message" : "Not found, locationid is required"
+        });
+        return;
+    }
+
+    try {
+        const location = await Loc.findById(req.params.locationid).exec();
+
+        if (!location){
+            sendJSONresponse(res, 404, {
+                "message" : "locationid not found"
+            });
+            return;
+        }
+
+        // Fields actuallized with data given in the request
+        location.name = req.body.name || location.name;
+        location.address = req.body.address || location.address;
+        location.facilities = req.body.facilities ? req.body.facilities.split(",") : location.facilities;
+        location.location = req.body.location ? {
+            type: "Point",
+            coordinates: [parseFloat(req.body.lng), parseFloat(req.body.lat)]
+        } : location.location;
+        location.openingTimes = req.body.openingTimes || location.openingTimes;
+
+        // Save changes
+        const updatedLocation = await location.save();
+        sendJSONresponse(res, 200, updatedLocation);
+    } catch (err) {
+        sendJSONresponse(res, 400, err);
+    }
+}
 
 // Handler to delete a specific location by ID
 module.exports.locationsDeleteOne = async function (req, res) {
