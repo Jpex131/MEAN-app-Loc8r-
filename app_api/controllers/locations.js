@@ -79,17 +79,17 @@ module.exports.locationsReadOne = async function(req, res) {
         try {
             const location = await Loc.findById(req.params.locationid).exec();
             if (!location) {
-                sendJsonResponse(res, 404, {
+                sendJSONresponse(res, 404, {
                     "message": "locationid not found"
                 });
                 return;
             }
-            sendJsonResponse(res, 200, location);
+            sendJSONresponse(res, 200, location);
         } catch (err) {
-            sendJsonResponse(res, 404, err);
+            sendJSONresponse(res, 404, err);
         }
     } else {
-        sendJsonResponse(res, 404, {
+        sendJSONresponse(res, 404, {
             "message": "No locationid in request"
         });
     }
@@ -101,7 +101,7 @@ module.exports.locationsCreate = async function (req, res) {
 
     // Data validation
     if (!name || !address) {
-        sendJsonResponse(res, 400, {
+        sendJSONresponse(res, 400, {
             "message": "Name and address are required"
         });
         return;
@@ -116,7 +116,7 @@ module.exports.locationsCreate = async function (req, res) {
         }
 
         if (existingLocation) {
-            sendJsonResponse(res, 409, {
+            sendJSONresponse(res, 409, {
                 "message": "Location already exists"
             });
             return;
@@ -131,9 +131,9 @@ module.exports.locationsCreate = async function (req, res) {
         });
 
         const savedLocation = await location.save();
-        sendJsonResponse(res, 201, savedLocation);
+        sendJSONresponse(res, 201, savedLocation);
     } catch (err) {
-        sendJsonResponse(res, 400, err);
+        sendJSONresponse(res, 400, err);
     }
 };
 
@@ -177,7 +177,7 @@ module.exports.locationsUpdateOne = async function (req, res) {
 // Handler to delete a specific location by ID
 module.exports.locationsDeleteOne = async function (req, res) {
     if (!req.params || !req.params.locationid){
-        sendJsonResponse(res, 404, {
+        sendJSONresponse(res, 404, {
             "message": "Not found, locationid is required"
         });
         return;
@@ -186,15 +186,15 @@ module.exports.locationsDeleteOne = async function (req, res) {
     try {
         const location = await Loc.findByIdAndDelete(req.params.locationid).exec();
         if (!location) {
-            sendJsonResponse(res, 404, {
+            sendJSONresponse(res, 404, {
                 "message": "locationid not found"
             });
             return;
         }
 
-        sendJsonResponse(res, 204, null);
+        sendJSONresponse(res, 204, null);
     } catch (err) {
         console.error("Error during location deletion:", err);
-        sendJsonResponse(res, 400, err);
+        sendJSONresponse(res, 400, err);
     }
 };
