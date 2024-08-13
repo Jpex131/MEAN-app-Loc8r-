@@ -37,7 +37,7 @@ module.exports.homelist = function(req, res){
         qs : {
             lng : -74.0062,
             lat : 40.7123,
-            maxDistance : 60 // Fixed maxDistance
+            maxDistance : 600000000 // Fixed maxDistance
         }
     };
     request(
@@ -132,8 +132,72 @@ module.exports.locationInfo = function(req, res){
 
 /* GET 'Add review' page */
 module.exports.addReview = function(req, res){
-    res.render('location-review-form', {
-        title: 'Review Starcups on Loc8r',
-        pageHeader: {title: 'Review Starcups'} // Fixed typo
-    });
+    var requestOptions, path;
+    path = "/api/locations/" + req.params.locationid;
+
+    requestOptions = {
+        url : apiOptions.server + path,
+        method : "GET",
+        json : {}
+    };
+
+    request(
+        requestOptions,
+        function(err, response, body){
+            if (response.statusCode === 200 && body){
+                var data = body;
+                if ( body.coords && body.coords.length === 2){
+                    data.coords = {
+                        lng : body.coords[0],
+                        lat : body.coords[1]
+                    };
+                } else {
+                    data.coords = {
+                        lng: 0,
+                        lat: 0
+                    };
+                    console.warn("Coordinates not found in the response body. Defaulting to (0,0).");
+                }
+                res.render('location-review-form', {
+                    title: `Review ${data.name} on Loc8r`,
+                    pageHeader: {title: `Review ${data.name}`},
+                    location: data
+                });
+            } else {
+                console.error("Error in addReview request:", err || `Status code: ${response.statusCode}`);
+                res.status(response.statusCode).json({"message" : "Location not found"});
+            }
+        }
+    );
+};
+
+
+module.exports.doAddReview = function(req, res){
+    var requestOptions, path, postData;
+    var locationid = req.params.locationid;
+    path = `/api/locations/` + locationid + `/reviews`;
+    postData = {
+        author: req.body.name,
+        rating: parseInt(req.body.rating, 10),
+        reviewText: req.body.review
+    };
+    requestOptions = {
+        url: apiOptions.server + path,
+        method: "POST",
+        json: postData
+    };
+    request(
+        requestOptions,
+        function(err, response, body){
+            if (err) {
+                console.error('Error while adding review:', err);
+                res.status(500).json(err);
+            } else if (response.statusCode === 201){
+                res.redirect('/location/' + locationid);
+            } else {
+                // Error handling
+                res.status(response.statusCode);
+            }
+        }
+    );
 };

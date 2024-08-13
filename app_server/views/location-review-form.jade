@@ -1,12 +1,12 @@
-extends layout 
+extends layout
 
-block content 
-    .row.page-header 
-        .col-12 
-            h1= pageHeader.title
+block content
+    .row.page-header
+        .col-lg-12
+            h1= location.name
     .row 
-        .col-12.col-md-8
-            form(action="/location", method="get", role="form")
+        .col-xs-12.col-md-8
+           form(action='/location/' + location._id + '/review/new', method="post", role="form")
                 .form-group.row
                     label.col-10.col-sm-2.col-form-label(for="name") Name
                     .col-12.col-sm-10
