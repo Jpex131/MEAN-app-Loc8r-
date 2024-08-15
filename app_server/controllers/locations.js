@@ -1,5 +1,43 @@
 var request = require('request');
 
+var _isNumeric = function(n){
+    return !isNaN(parseFloat(n)) && isFinite(n);
+};
+
+var _formatDistance = function (distance){
+    var numDistance, unit;
+    if (distance && _isNumeric(distance)){
+        if (distance > 1) {
+            numDistance = parseFloat(distance).toFixed(1);
+            unit = 'km';
+        } else {
+            numDistance = parseInt(distance * 1000, 10);
+            unit = 'm';
+        }
+        return numDistance + unit;
+    } else {
+        return "?";
+    }
+};
+var _showError = function(req, res, status){
+    var title, content;
+    if (status === 404){
+        title = "404, page not found";
+        content = "WoW looks like we can't find this page. Sorry";
+    } else if (status == 500){
+        title = "500, internal server error";
+        content = "Something went wrong on our side. Please try again later.";
+    } else {
+        title = status + ", something fone wrong";
+        content = "Something, Somewhere, has gone just a little bit wrong.";
+    }
+    res.status(status);
+    res.render('generic-text', {
+        title: title,
+        content: content
+    });
+};
+
 var renderHomepage = function(req, res, responseBody){
     var message;
     if (!(responseBody instanceof Array)){
@@ -62,26 +100,6 @@ module.exports.homelist = function(req, res){
     );
 };
 
-var _isNumeric = function(n){
-    return !isNaN(parseFloat(n)) && isFinite(n);
-};
-
-var _formatDistance = function (distance){
-    var numDistance, unit;
-    if (distance && _isNumeric(distance)){
-        if (distance > 1) {
-            numDistance = parseFloat(distance).toFixed(1);
-            unit = 'km';
-        } else {
-            numDistance = parseInt(distance * 1000, 10);
-            unit = 'm';
-        }
-        return numDistance + unit;
-    } else {
-        return "?";
-    }
-};
-
 var renderDetailPage = function (req, res, locDetail) {
     res.render('location-info', {
         title: locDetail.name,
@@ -124,7 +142,7 @@ module.exports.locationInfo = function(req, res){
                 renderDetailPage(req, res, data);
             } else {
                 console.error("Error in locationInfo request:", err || `Status code: ${response.statusCode}`);
-                res.status(response.statusCode).json({"message" : "Location not found"});
+                _showError(req, res, response.statusCode);
             }
         }
     );
